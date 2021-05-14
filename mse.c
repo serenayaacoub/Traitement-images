@@ -18,6 +18,7 @@ SDL_Color couleur_pixel(const SDL_Surface *image , int X, int Y)
     SDL_GetRGBA(data_pixel , image->format , &color.r , &color.g , &color.b , &color.a );   // on remplit le contenu de color
 
     //printf("Le pixel est composé de %d rouge, %d vert et %d bleu et est %d opaque.\n",color.r , color.g , color.b , color.a);
+
     return color;
 }
 
@@ -35,13 +36,15 @@ int *couleur_image(SDL_Surface *image, int *color_image)
     Uint8 bpp = image->format->BitsPerPixel;
     SDL_Color color_pixel = {0x00 , 0x00 , 0x00 , SDL_ALPHA_OPAQUE};    // couleur d'un pixel
     
+    int X, Y;
 
-    for (i = 0 ; i <= largeur ; i++)
+
+    for (i = 1 ; i < largeur+1 ; i++)
     {
-        int Y = i;
-        for (j = 0 ; j <= longueur ; j++)
+        Y = i;
+        for (j = 1 ; j < longueur+1 ; j++)
         {
-            int X = j;
+            X = j;
             
             Uint8 *ppixel = (Uint8 *) image->pixels + Y*image->pitch + X*bpp;   // on récupère l'information du pixel choisi
             Uint32 data_pixel = *(Uint32*) ppixel;
@@ -79,9 +82,9 @@ float mse_images(SDL_Surface *image1 , SDL_Surface *image2)
     int i,j;
     float difference_carre = 0.0;
 
-    for (i = 0 ; i < m ; i++)
+    for (i = 1 ; i < m-4 ; i++)
     {
-        for (j = 0 ; j < n ; j++)
+        for (j = 1 ; j < n-4 ; j++)
         {
             SDL_Color res_amplitude1 = couleur_pixel(image1 , i,j);
             int r1 = res_amplitude1.r;
@@ -93,7 +96,7 @@ float mse_images(SDL_Surface *image1 , SDL_Surface *image2)
             int v2 = res_amplitude2.g;
             int b2 = res_amplitude2.b;
 
-            difference_carre += pow((r1+v1+b1) - (r2+v2+b2),2); // (I - I')^2
+            difference_carre += (float) pow((r1+v1+b1) - (r2+v2+b2),2); // (I - I')^2
         }
     }
 
@@ -107,10 +110,10 @@ int main()
     SDL_VERSION(&nb);
 
     char *filename1 = "images/red.jpg";
-    char *filename2 = "images/pepers.jpg";
+    char *filename2 = "images/red (copie).jpg";
     
     SDL_Surface *image1, *converted1;
-    SDL_Surface *image2 , *converted2;
+    SDL_Surface *image2, *converted2;
 
     image1 = IMG_Load(filename1);
     image2 = IMG_Load(filename2);
@@ -125,17 +128,7 @@ int main()
 
     printf("mse = %f\n",mse);
 
-    /* 
-
-    non seulement les mse sont différents à chaque compilation pour le même test, mais aussi, pour la même image, le mse est élevée de l'ordre de 500.
-
-    par exemple pour red et red (copie) , à certains moments, r1 et r2 ne sont pas pareils.
-
-    on remarque que seule la partie entière est importante.
-
-    par soucis de visibililté, on peut diviser par 10 ou 100 pour mieux comparer.
-
-    */
+    SDL_Quit();
 
     return 0;
 }
