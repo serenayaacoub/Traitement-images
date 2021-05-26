@@ -39,10 +39,10 @@ int *couleur_image(SDL_Surface *image, int *color_image)
     int X, Y;
 
 
-    for (i = 1 ; i < largeur+1 ; i++)
+    for (i = 1 ; i < largeur ; i++)
     {
         Y = i;
-        for (j = 1 ; j < longueur+1 ; j++)
+        for (j = 1 ; j < longueur ; j++)
         {
             X = j;
             
@@ -110,7 +110,7 @@ int main()
     SDL_VERSION(&nb);
 
     char *filename1 = "images/red.jpg";
-    char *filename2 = "images/red (copie).jpg";
+    char *filename2 = "images/pepers.jpg";
     
     SDL_Surface *image1, *converted1;
     SDL_Surface *image2, *converted2;
