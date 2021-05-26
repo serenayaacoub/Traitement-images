@@ -53,10 +53,10 @@ int *couleur_image(SDL_Surface *image, int *color_image)
     Uint8 bpp = image->format->BitsPerPixel;
     SDL_Color color_pixel = {0x00 , 0x00 , 0x00 , SDL_ALPHA_OPAQUE};    // couleur d'un pixel
     
-
     int X;
     int Y;
     Uint32 data_pixel;
+    Uint32 *ppixel = (Uint32 *) malloc(1000*sizeof(Uint32));
 
     for (i = 0 ; i < largeur ; i++)
     {
@@ -65,7 +65,7 @@ int *couleur_image(SDL_Surface *image, int *color_image)
         {
             X = j;
             
-            Uint8 *ppixel = (Uint8 *) image->pixels + Y*image->pitch + X*bpp;   // on récupère l'information du pixel choisi
+            ppixel = image->pixels + Y*image->pitch + X*bpp;   // on récupère l'information du pixel choisi
             data_pixel = *(Uint32*) ppixel;
 
             SDL_GetRGBA(data_pixel , image->format , &color_pixel.r , &color_pixel.g , &color_pixel.b , &color_pixel.a );
@@ -77,7 +77,7 @@ int *couleur_image(SDL_Surface *image, int *color_image)
             color_image[3] += color_pixel.a;
 
         }
-        
+        free(ppixel);
     }
 
     for (i = 0 ; i <= 4 ; i++)
@@ -85,7 +85,6 @@ int *couleur_image(SDL_Surface *image, int *color_image)
         color_image[i] /= (largeur*longueur);
     }
 
-    
 
     return color_image;
 }
@@ -130,6 +129,8 @@ int main()
     printf("L'image est composée de %d rouge , %d vert , %d bleu et est %d opaque.\n", couleur_i[0] , couleur_i[1] , couleur_i[2] , couleur_i[3]);
 
     printf("Niveau de gris : %f\n\n",niv_gris(image, 100, 100));
+
+    free(image);
 
     return 0;
 }

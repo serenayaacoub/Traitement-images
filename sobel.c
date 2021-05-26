@@ -27,7 +27,7 @@ SDL_Color couleur_pixel(const SDL_Surface *image , int X, int Y)
 float niv_gris(const SDL_Surface *image , int X, int Y)
 {
     // renvoie le niveau de gris 
-     
+
     SDL_Color pix = couleur_pixel(image,X,Y);
 
     float gris = (float) 0.2125*pix.r + 0.7154*pix.g + 0.0721*pix.b;
@@ -36,24 +36,46 @@ float niv_gris(const SDL_Surface *image , int X, int Y)
 
 }
 
-int **A_pix(SDL_Surface *image,int x, int y)
+int in_the_pic(const SDL_Surface *image , int x, int y)
+{
+    // retourne 1 si le pixel est dans l'image, 0 sinon
+
+    int largeur = image -> w; // nombre de colonnes 
+    int hauteur = image -> h; // nombre de lignes 
+
+    int test = 1;
+
+    if ((x > hauteur) || (y > largeur) || (x < 0) || (y < 0))
+    {
+        test = 0;
+    }
+
+    return test;
+}
+
+int **A_pixel(SDL_Surface *image, int x, int y)
+{
+    ;
+}
+
+int **A_pix(SDL_Surface *image,int x, int y)    // PAS NECESSAIRE 
 {
     // retourne une matrice 3x3 qui présente les niveaux de gris des pixels alentours à (x,y)
 
     int topleft, topmid , topright , left , right , botleft , botmid, botright;
 
     // on récupère la taille de l'image 
-    int largeur = image -> w;
-    int longueur = image -> h;
+    int largeur = image -> w; // nombre de colonnes 
+    int hauteur = image -> h; // nombre de lignes 
 
-    float mid_hor = (float) longueur/2;
+    float mid_hor = (float) hauteur/2;
     float mid_ver = (float) largeur/2;
 
     int i,j;
 
     // matrice de retour, on l'initialise de base aux niveaux de gris des pixels alentours. si on est sur les bords, on met les 0 là où c'est nécessaire
 
-    if ((x%longueur != 0) && (y%largeur != 0))
+    if ((x%hauteur != 0) && (y%largeur != 0))
     {
         topleft = niv_gris(image,x-1,y-1);
         topmid = niv_gris(image, x , y-1);
@@ -83,7 +105,7 @@ int **A_pix(SDL_Surface *image,int x, int y)
 
         else if (y < mid_ver) // en haut 
         {
-            if ((x%longueur != 0) && (y == 0))  // bordure du haut sans l'angle 
+            if ((x%hauteur != 0) && (y == 0))  // bordure du haut sans l'angle 
             {
         
                 left = niv_gris(image, x-1,y);
@@ -112,7 +134,7 @@ int **A_pix(SDL_Surface *image,int x, int y)
 
         else    // en bas 
         {
-            if ((x%longueur != 0) && (y == largeur))  // bordure du bas sans l'angle
+            if ((x%hauteur != 0) && (y == largeur))  // bordure du bas sans l'angle
             {
                 topleft = niv_gris(image,x-1,y-1);
                 topmid = niv_gris(image, x , y-1);
@@ -143,7 +165,7 @@ int **A_pix(SDL_Surface *image,int x, int y)
 
     else    // à droite 
     {
-        if ((x == longueur) && (y%longueur != 0)) // bordure de droite sans l'angle
+        if ((x == hauteur) && (y%hauteur != 0)) // bordure de droite sans l'angle
         {
             topleft = niv_gris(image,x-1,y-1);
             topmid = niv_gris(image, x , y-1);
@@ -158,7 +180,7 @@ int **A_pix(SDL_Surface *image,int x, int y)
         
         else if (y < mid_ver) // en haut 
         {
-            if((x%longueur != 0) && (y == 0))  // bordure du haut sans l'angle
+            if((x%hauteur != 0) && (y == 0))  // bordure du haut sans l'angle
             {
                 
                 left = niv_gris(image, x-1,y);
@@ -172,7 +194,7 @@ int **A_pix(SDL_Surface *image,int x, int y)
                 topright = 0;
             }
 
-            if ((x == longueur) && (y == 0)) // angle supérieur droite
+            if ((x == hauteur) && (y == 0)) // angle supérieur droite
             {
                         
                 left = niv_gris(image, x-1,y);
@@ -190,7 +212,7 @@ int **A_pix(SDL_Surface *image,int x, int y)
 
         else // en bas 
         {
-            if ((x%longueur != 0) && (y == largeur))  // bordure du bas sans l'angle
+            if ((x%hauteur != 0) && (y == largeur))  // bordure du bas sans l'angle
             {
                 topleft = niv_gris(image,x-1,y-1);
                 topmid = niv_gris(image, x , y-1);
@@ -203,7 +225,7 @@ int **A_pix(SDL_Surface *image,int x, int y)
                 botright = 0;
             }
 
-            if ((x == longueur) && (y == largeur)) // angle inférieur droite
+            if ((x == hauteur) && (y == largeur)) // angle inférieur droite
             {
                 topmid = niv_gris(image, x , y-1);
                 topright = niv_gris(image, x+1, y-1);
@@ -258,6 +280,13 @@ float *filtre_sobel(SDL_Surface *image)
     int longueur = image -> h;
 
     G_image = (float *) malloc(longueur*largeur*sizeof(float));
+
+    if (G_image == NULL)
+    {
+        printf("Erreur allocation mémoire\n");
+        exit(1);
+    }
+
     int index = 0;
 
     for (int i = 0 ; i < largeur ; i++)
@@ -268,10 +297,11 @@ float *filtre_sobel(SDL_Surface *image)
             
             for (int n= 0; n <= N-1; n++)
             {
+                
                 for (int m = 0; m <= N-1; m++)      // ERREUR DE SEGMENTATION : ON NE SORT PAS DE LA BOUCLE
                 {
-                    Gx += Dx[N-n][N-m] * A[1+n][1+m];
-                    Gy += Dy[N-n][N-m] * A[1+n][1+m];
+                    Gx += Dx[N-n][N-m] * A[n][m];
+                    Gy += Dy[N-n][N-m] * A[n][m];
 
                     G = (float) sqrt(pow(Gx,2) + pow(Gy,2)); // norme du gradiant en chaque pixel
 
