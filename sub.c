@@ -79,7 +79,8 @@ SDL_Surface *moy_pixel(SDL_Surface *image, float eps)
 
     float y = (float) 1/(m*n);
     
-    int i,j;
+    int i = 0;
+    int j = 0;
     //float moyenne = 0.0;
     float m_R = 0.0;
     float m_V = 0.0;
@@ -160,8 +161,17 @@ SDL_Surface *correction_image(SDL_Surface *image, Uint32 nb_sub){
         exit(1);
     }
 
-    SDL_Rect rect1; 
+    SDL_Rect rect1;
+    rect1.x = 0;  
+    rect1.y = 0;
+    rect1.w = 0;
+    rect1.h = 0;
+
     SDL_Rect rect2;
+    rect2.x = 0;  
+    rect2.y = 0;
+    rect2.w = 0;
+    rect2.h = 0;
 
     int i,j;
     
@@ -188,8 +198,8 @@ SDL_Surface *correction_image(SDL_Surface *image, Uint32 nb_sub){
                 SDL_BlitSurface(image,&rect1,temp,&rect2);
 
                 
-                temp = moy_pixel(temp,0.01);
-                printf("ici\n");
+                temp = moy_pixel(temp,0.01); // SEG FAULT ICI
+                
                 SDL_BlitSurface(temp,&rect2,image,&rect1);
 
             }
@@ -260,6 +270,9 @@ SDL_Surface *correction_image(SDL_Surface *image, Uint32 nb_sub){
             }
         }
     }
+
+    free(temp);
+
     return image;
 }
 
@@ -270,11 +283,13 @@ int main()
     SDL_version nb;
     SDL_VERSION(&nb);
 
-    int i,j;
+    int i = 0;
+    int j = 0;
 
     char *filename = "images/pepers.jpg";
     
-    SDL_Surface *image, *converted;
+    SDL_Surface *image = NULL;
+    SDL_Surface *converted = NULL;
     
     image = IMG_Load(filename);
     
@@ -286,6 +301,8 @@ int main()
     moy_pixel(image,0.01);
 
     correction_image(image,3);
+
+    free(image);
 
     return 0;
 }
