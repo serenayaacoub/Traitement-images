@@ -78,6 +78,7 @@ SDL_Surface *moy_pixel(SDL_Surface *image, float eps)
     int m = image -> h;
 
     float y = (float) 1/(m*n);
+    
     int i,j;
     //float moyenne = 0.0;
     float m_R = 0.0;
@@ -87,48 +88,53 @@ SDL_Surface *moy_pixel(SDL_Surface *image, float eps)
     //int *color_image;
 
     for (i = 0 ; i < m ; i++)
-    {
+    {   
         for (j = 0 ; j < n ; j++)
         {
             SDL_Color res_amplitude1 = couleur_pixel(image , i,j);
-            int r1 = res_amplitude1.r;
-            int v1 = res_amplitude1.g;
-            int b1 = res_amplitude1.b;
-
+            float r1 = res_amplitude1.r;
+            float v1 = res_amplitude1.g;
+            float b1 = res_amplitude1.b;
+            
             m_R += r1 ;
             m_V += v1 ;
             m_B += b1 ;
             
             //moyenne += (r1 + v1 + b1);
+            
         }
     }
-    m_R = (float)m_R*y ;
-    m_V = (float)m_V*y ;
-    m_B = (float)m_B*y ;
-    //moyenne = (float) moyenne*y;
+   
+    m_R = m_R*y ;
+    m_V = m_V*y ;
+    m_B = m_B*y ;
     
+    //moyenne = (float) moyenne*y;
+
+ 
     for (i = 0 ; i < m ; i++)
     {
         for (j = 0 ; j < n ; j++)
         {
             SDL_Color res_amplitude1 = couleur_pixel(image , i,j);
-            int r1 = res_amplitude1.r;
-            int v1 = res_amplitude1.g;
-            int b1 = res_amplitude1.b;
+            float r1 = res_amplitude1.r;
+            float v1 = res_amplitude1.g;
+            float b1 = res_amplitude1.b;
 
             
-            if (val_abs(m_R - r1) > eps)
+            if (abs(m_R - r1) > eps)
             {
                 r1 = m_R ;
             }
-            if (val_abs(m_V - v1) > eps)
+            if (abs(m_V - v1) > eps)
             {
                 v1 = m_V ;
             }
-            if (val_abs(m_B - b1) > eps)
+            if (abs(m_B - b1) > eps)
             {
                 b1 = m_R ;
             }
+            
         }
     }
     
@@ -143,10 +149,18 @@ SDL_Surface *correction_image(SDL_Surface *image, Uint32 nb_sub){
     Uint8 bpp = image->format->BitsPerPixel;
     const Uint32 x = image->w;
     const Uint32 y = image->h;
-    Uint32 a=floor(x/nb_sub)+1; // c'est quoi a et b
-    Uint32 b=floor(y/nb_sub)+1;
-    SDL_Surface *temp;
-    SDL_Rect rect1;
+    Uint32 a=floor(x/nb_sub)+1; // floor : partie entière     a c'est le nombre de sous divisions verticales
+    Uint32 b=floor(y/nb_sub)+1; // b : nb de sous divisions horizontales
+    SDL_Surface *temp = NULL; // sous division
+    temp = (SDL_Surface *) malloc(sizeof(SDL_Surface));
+
+    if (!temp)
+    {
+        printf("Erreur allocation mémoire\n");
+        exit(1);
+    }
+
+    SDL_Rect rect1; 
     SDL_Rect rect2;
 
     int i,j;
@@ -154,42 +168,44 @@ SDL_Surface *correction_image(SDL_Surface *image, Uint32 nb_sub){
     for(i=1;i++;i<a){
         for(j=1;j++;j<b){  // on ne fait ça qu'une fois
             
-            if ((a*(i+1)>x) && (b*(j+1)>y)){ // on teste quoi ? + on entre dans ce cas
-                printf("ligne 158\n");
+            if ((a*(i+1)>x) && (b*(j+1)>y)){ // si on dépasse l'image de base en bas et à droite
+                
                 rect1.x=a*i;
                 rect1.y=b*j;
-                rect1.w=x - a*i -1;
-                rect1.h=y - b*j -1;
+                rect1.w=x - a*i;
+                rect1.h=y - b*j;
+                temp->w=x - a*i; // SEG FAULT A PARTIR D'ICI DONC A VOIR SI C'EST REPERCUTE DANS LES AUTRES IF
                 
-                temp->w=x - a*i -1; // SEG FAULT A PARTIR D'ICI DONC A VOIR SI C'EST REPERCUTE DANS LES AUTRES IF
-                temp->h=y - b*j -1;        
+                temp->h=y - b*j;     
+                  
                 rect2.x=0;
                 rect2.y=0;
-                rect2.w=x - a*i -1;
-                rect2.h=y - b*j -1;
                 
-               
-
+                rect2.w=x - a*i;
+                
+                rect2.h=y - b*j;
+                
                 SDL_BlitSurface(image,&rect1,temp,&rect2);
 
-                temp = moy_pixel(temp,0.01);
                 
+                temp = moy_pixel(temp,0.01);
+                printf("ici\n");
                 SDL_BlitSurface(temp,&rect2,image,&rect1);
 
             }
-            if ((a*(i+1)<=x) && (b*(j+1)>y)){   // elif ou if à mettre ?
+            else if ((a*(i+1)<=x) && (b*(j+1)>y)){   // si on dépasse l'image par le bas
                 
                 rect1.x=a*i;
                 rect1.y=b*j;
                 rect1.w=a;
-                rect1.h=y - b*j -1;
+                rect1.h=y - b*j;
 
                 temp->w=a;
-                temp->h=y - b*j -1;        
+                temp->h=y - b*j;        
                 rect2.x=0;
                 rect2.y=0;
                 rect2.w=a;
-                rect2.h=y - b*j -1;
+                rect2.h=y - b*j;
 
                 SDL_BlitSurface(image,&rect1,temp,&rect2);
 
@@ -199,18 +215,18 @@ SDL_Surface *correction_image(SDL_Surface *image, Uint32 nb_sub){
 
                 
             }
-            if ((a*(i+1)>x) && (b*(j+1)<=y)){
+            else if ((a*(i+1)>x) && (b*(j+1)<=y)){ // si on dépasse par la droite
                 
                 rect1.x=a*i;
                 rect1.y=b*j;
-                rect1.w=x - a*i -1;
+                rect1.w=x - a*i;
                 rect1.h=b;
                    
-                temp->w=x - a*i -1;
+                temp->w=x - a*i;
                 temp->h=b;        
                 rect2.x=0;
                 rect2.y=0;
-                rect2.w=x - a*i -1;
+                rect2.w=x - a*i;
                 rect2.h=b;
 
                 SDL_BlitSurface(image,&rect1,temp,&rect2);
@@ -220,7 +236,7 @@ SDL_Surface *correction_image(SDL_Surface *image, Uint32 nb_sub){
                 SDL_BlitSurface(temp,&rect2,image,&rect1);
 
             }
-            if ((a*(i+1)<=x) && (b*(j+1)<=y)){
+            else if ((a*(i+1)<=x) && (b*(j+1)<=y)){ // si tout va bien
                 
 //          On définit le rectangle à extraire      
                 rect1.x=a*i;
@@ -267,6 +283,8 @@ int main()
         return -1;
     }
     
+    moy_pixel(image,0.01);
+
     correction_image(image,3);
 
     return 0;
